@@ -13,16 +13,16 @@
  * Exibir nomes da equipe copyright - OK
  * Exibir informação do usuário id username - OK
  * Encerrar sessao logout - OK
- 
- * Remover Diretorio (Verificar se existe filho)
- * Adicionar user adduser username so root pode
- * Remover user deluser username so root pode
- * Bloquear usuario block username so root pode
- * Desbloquear username unlock username so root pode
- * o usuario so pode editar as pastas abaixo dele
- * Encerrar programa (poweroff) apenas o root pode fazer
+ * Adicionar user adduser username so root pode - OK
+ * Bloquear usuario block username so root pode - OK
+ * Desbloquear username unlock username so root pode - OK
+ * Remover user deluser username so root pode - apagar dir ? 
  * Exibir a data date - pode ser junto com hr ?
  * Exibir a hora time - - pode ser junto com hr ?
+ 
+ * Remover Diretorio (Verificar se existe filho)
+ * o usuario so pode editar as pastas abaixo dele
+ * Encerrar programa (poweroff) apenas o root pode fazer
  * Salvar todos os dados em arquivo para nao perder na hora reiniciar o programa
  */
 /* ******* -------------- ******* *** */
@@ -43,7 +43,7 @@ typedef struct {
     int id;
     char name[100];
     char login[9];
-    int status;
+    int status; // 1- enable
     int dirId;
     struct Users *prox;
     
@@ -66,13 +66,19 @@ void CD (Dirs *inicio);
 void Copyright();
 void userInfo (Users *inicio);
 void Logout ();
+void InsertHome (Dirs *inicio, char* name);
 
 void Login (Users *inicio, char* name);
 void ShowDateTime ();
+void AddUser (Users *user_ini);
+void BlockUsername (Users *inicio);
+void UnlockUsername (Users *inicio);
+void RmR (Dirs *inicio);
+void DelUser (Users *inicio);
 
 
 /* Variaveis global */
-int id=0, currentDir = 0, current_user = 0, userId=0;
+int id=0, currentDir = 0, current_user = 0, userId=1;
 char parans[9];
 
 
@@ -145,11 +151,47 @@ int main(void)
     if(strcmp (comando, "rmdir") == 0) {
         Remove(&ini);
     }
+    if(strcmp (comando, "adduser") == 0) {
+        if(current_user != 1) {
+            printf("Desculpe mas voce nao tem essa permissao \n");
+        } else {
+            InsertHome(&ini, parans);
+            AddUser(&ini_users);
+        }
+        
+        
+    }
+        
+    if(strcmp (comando, "blockuser") == 0) {
+        if(current_user != 1) {
+            printf("Desculpe mas voce nao tem essa permissao \n");
+        } else {
+            BlockUsername(&ini_users);
+        }
+    }
+        
+    if(strcmp (comando, "unlockuser") == 0) {
+        if(current_user != 1) {
+            printf("Desculpe mas voce nao tem essa permissao \n");
+        } else {
+            UnlockUsername(&ini_users);
+        }
+    }
+        
     if(strcmp (comando, "cd") == 0) {
         CD(&ini);
     }
         
+    if(strcmp (comando, "deluser") == 0) {
+        if(current_user != 1) {
+            printf("Desculpe mas voce nao tem essa permissao \n");
+        } else {
+            DelUser(&ini_users);
+            RmR(&ini);
+        }
     }
+        
+}
     
     
     
@@ -172,7 +214,7 @@ void Inicializar_Users (Users *users)
     users->id = 1;
     strcpy(users->name, "ROOT");
     strcpy(users->login, "root");
-    users->status = 0;
+    users->status = 1;
     users->dirId = 0;
     users->prox = NULL;
 }
@@ -196,6 +238,28 @@ void Inserir (Dirs *inicio)
             percorre = percorre -> prox;
         }
         percorre->prox = no_novo;
+    
+}
+
+void InsertHome (Dirs *inicio, char* name)
+{
+    id++;
+    Dirs *percorre;
+    
+    /* Criacao do novo no - AlocaÁ„o de memoria */
+    Dirs *no_novo = (Dirs *) malloc(sizeof(Dirs));
+    no_novo -> id = id;
+    no_novo -> father_id = 0;
+    no_novo -> property_id = userId;
+    strcpy(no_novo->name, name);
+    no_novo -> prox = NULL;
+    
+    percorre = inicio;
+    while (percorre->prox != NULL)
+    {
+        percorre = percorre -> prox;
+    }
+    percorre->prox = no_novo;
     
 }
 
@@ -245,6 +309,37 @@ void Remove (Dirs *inicio)
 }
 
 
+void RmR (Dirs *inicio) //del folder and content
+{
+    int currentDirOld = currentDir;
+    currentDir = 0;
+    int i =0;
+    Dirs *percorre, *percorreAnt;
+    percorre = inicio;
+    while (1 > 0)
+    {
+        if(percorre->father_id == currentDir && strcmp (percorre->name, parans) == 0 &&percorre->id !=0) {
+            
+            //if(percorre->id == 1) {
+            if(percorre->prox == NULL) {
+                percorreAnt -> prox = NULL;
+                free(percorre);
+            } else {
+                //meio
+                percorreAnt->prox = percorre->prox;
+            }
+        }
+        if(percorre->prox == NULL) {break;}
+        percorreAnt = percorre;
+        percorre = percorre -> prox;
+        i++;
+    }
+    
+    currentDir = currentDirOld;
+    
+}
+
+
 void CD (Dirs *inicio)
 {
     Dirs *percorre;
@@ -289,19 +384,27 @@ void PWD (Dirs *inicio) {
 void Login (Users *inicio, char* name) {
     Users *percorre;
     percorre = inicio;
+    int i =0;
     while (1 > 0)
     {
         if(strcmp (percorre->login, name) == 0) {
-            current_user = percorre->id;
-            currentDir = percorre->dirId;
-            printf("\n Bem-Vindo %s \n", percorre->name);
-        } else{
-            current_user = 0;
+            i++;
+            if(percorre->status == 1) {
+                current_user = percorre->id;
+                currentDir = percorre->dirId;
+                printf("\n Bem-Vindo %s \n", percorre->name);
+            } else {
+                printf("Nao e possivel logar em um usuario bloqueado \n");
+            }
         }
+        
         if(percorre->prox == NULL) {break;}
         percorre = percorre -> prox;
-        
     }
+    if(current_user == 0 && i == 0) {
+        printf("\n Desculpe login invalido \n");
+    }
+    if(i == 0) {current_user = 0;}
 }
 
 void userInfo (Users *inicio) {
@@ -313,6 +416,53 @@ void userInfo (Users *inicio) {
         if(strcmp (percorre->login, parans) == 0) {
             i++;
             printf("\n Nome: %s \n", percorre->name);
+        }
+        if(percorre->prox == NULL) {break;}
+        percorre = percorre -> prox;
+    }
+    if(i == 0) {
+        printf("Usuario nao localizado \n");
+    }
+}
+
+void BlockUsername (Users *inicio) {
+    Users *percorre;
+    percorre = inicio;
+    int i =0; //count of localized user
+    while (1 > 0)
+    {
+        if(strcmp (percorre->login, parans) == 0) {
+            i++;
+            if(percorre->status == 0){
+                printf("Esse usuario ja esta bloqueado \n");
+            } else {
+                printf("\n  %s bloqueado com sucesso \n", percorre->name);
+                percorre->status = 0;
+            }
+        }
+        if(percorre->prox == NULL) {break;}
+        percorre = percorre -> prox;
+    }
+    if(i == 0) {
+        printf("Usuario nao localizado \n");
+    }
+}
+
+void UnlockUsername (Users *inicio) {
+    Users *percorre;
+    percorre = inicio;
+    int i =0; //count of localized user
+    while (1 > 0)
+    {
+        if(strcmp (percorre->login, parans) == 0) {
+            i++;
+            if(percorre->status == 1){
+                printf("Esse usuario ja esta desbloqueado \n");
+            } else {
+                printf("\n  %s desbloqueado com sucesso \n", percorre->name);
+                percorre->status = 1;
+            }
+            
         }
         if(percorre->prox == NULL) {break;}
         percorre = percorre -> prox;
@@ -336,12 +486,69 @@ void Copyright () {
 void Logout () {
     current_user = 0;
 }
+//Pendente
+void AddUser (Users *user_ini)
+{
+    
+    userId++;
+    Users *percorre;
+    char fullname[100];
+    printf("Nome Completo: ");
+    gets(fullname);
+    /* Criacao do novo no - AlocaÁ„o de memoria */
+    Users *no_novo = (Users *) malloc(sizeof(Users));
+    no_novo -> id = userId;
+    no_novo->status = 1;
+    no_novo->dirId = id;
+    strcpy(no_novo->name, fullname);
+    strcpy(no_novo->login, parans);
+    no_novo -> prox = NULL;
+    
+    percorre = user_ini;
+    while (percorre->prox != NULL)
+    {
+        percorre = percorre -> prox;
+    }
+    percorre->prox = no_novo;
+    
+}
+
+void DelUser (Users *inicio)
+{
+    int i =0;
+    Users *percorre, *percorreAnt;
+    percorre = inicio;
+    while (1 > 0)
+    {
+        if(strcmp (percorre->login, parans) == 0 &&percorre->id !=1) {
+            
+            //if(percorre->id == 1) {
+            if(percorre->prox == NULL) {
+                percorreAnt -> prox = NULL;
+                free(percorre);
+            } else {
+                //meio
+                percorreAnt->prox = percorre->prox;
+            }
+            i++;
+        }
+        if(percorre->prox == NULL) {break;}
+        percorreAnt = percorre;
+        percorre = percorre -> prox;
+    }
+    if(i > 0) {
+        printf("Usuario deletado com sucesso \n");
+    } else {
+        printf("Usuario invalido \n");
+    }
+    
+}
 
 
 
 void Poweroff (Dirs *inicio, Users *user_inicio) {
     if(current_user != 1) {
-        printf("Desculpe, mas você não tem permissao psra executar este comando");
+        printf("Desculpe, mas você não tem permissao para executar este comando");
     } else {
         //save in file and close
     }
