@@ -88,6 +88,14 @@ void SaveDirs (Dirs *dirs_ini);
 void Le_valor_arquivo_Dirs(Dirs *inicio);
 void InsertDirsFiles (Dirs *inicio, int lid, char* name, int father_id, int property_id, char* datetime);
 void SplitPipeDirs(Dirs *inicio, char* all);
+
+
+
+char* STRSaveUsers (Users *users_ini);
+void SaveUsers (Users *dirs_ini);
+void Le_valor_arquivo_Users(Users *inicio);
+void SplitPipeUsers(Users *inicio, char* all);
+void InsertUsersFiles (Users *users, int lid, char* name, char* login, int status, int dirId);
 /* Variaveis global */
 int id=0, currentDir = 0, current_user = 0, userId=1;
 char parans[9];
@@ -111,8 +119,9 @@ int main(void)
     Inicializar_Dirs(&ini);
     Inicializar_Users(&ini_users);
     
-    Le_valor_arquivo_Dirs(&ini);
     Le_valor_arquivo_globals();
+    Le_valor_arquivo_Dirs(&ini);
+    Le_valor_arquivo_Users(&ini_users);
     
     while (1>0) {
     if(current_user == 0) {
@@ -428,7 +437,7 @@ void CD (Dirs *inicio)
         while (1 > 0)
         {
             if(percorre->id == currentDir ) {
-//                printf("Proprietario: %d \n", VerifyProperty(inicio, percorre->father_id));
+//                //printf("Proprietario: %d \n", VerifyProperty(inicio, percorre->father_id));
                 if(VerifyProperty(inicio, percorre->father_id) == current_user ||  current_user == 1 ) {
                         currentDir = percorre->father_id;
                 } else {
@@ -668,7 +677,8 @@ void PowerOff (Dirs *inicio, Users *user_inicio) {
     } else {
         SaveGlobals();
         SaveDirs(inicio);
-        //char* algo = PrepareSaveDirs(inicio);
+        SaveUsers(user_inicio);
+        //char* algo = STRSaveUsers(user_inicio);
         exit(0);
     }
 }
@@ -719,7 +729,7 @@ void Le_valor_arquivo_globals() {
         char *ch;
         ch = strtok(num, "|");
         while (ch != NULL) {
-            printf("%s\n", ch);
+            //printf("%s\n", ch);
             id=atoi(ch);
             ch = strtok(NULL, " #");
         }
@@ -741,7 +751,7 @@ char* PrepareSaveDirs (Dirs *dirs_ini) {
     {
         if(percorre == NULL) {break;}
         if(percorre->id > 0) {
-            printf("%d", percorre->id);
+            //printf("%d", percorre->id);
             if(i == 0) {
                 sprintf(retorno, "%d", percorre->id);
                 i++;
@@ -765,7 +775,7 @@ char* PrepareSaveDirs (Dirs *dirs_ini) {
         }
         percorre = percorre -> prox;
     }
-    printf("%s", retorno);
+    //printf("%s", retorno);
     return retorno;
 }
 
@@ -788,7 +798,7 @@ void SaveDirs (Dirs *dirs_ini) {
 
 void InsertDirsFiles (Dirs *inicio, int lid, char* name, int father_id, int property_id, char* datetime)
 {
-    printf("LID %d NAME: %s, FATHER: %d PROPERTY: %d DATA %s", lid, name, father_id, property_id, datetime);
+    //printf("LID %d NAME: %s, FATHER: %d PROPERTY: %d DATA %s", lid, name, father_id, property_id, datetime);
     //exit(1);
     Dirs *percorre;
     
@@ -816,90 +826,6 @@ void InsertDirsFiles (Dirs *inicio, int lid, char* name, int father_id, int prop
 
 
 
-/*
-void Le_valor_arquivo_Dirs(Dirs *inicio) {
-    char all[200];
-    FILE *arquivo;
-    int id, father_id, property_id, i, j=0;
-    char datetime[9999], Nnome[9999];
-    
-    arquivo=fopen("Dirs.txt","r");
-    if ( arquivo == NULL ) {
-        printf("Nao existem Diretorios salvos.\n");
-        
-    } else {
-        fgets(all,sizeof(all), arquivo);
-        //printf("%s", all);
-        //exit(2);
-        fclose(arquivo);
-        
-        char *ch, *ch2;
-        ch = strtok(all, "#");
-        while (ch != NULL) {
-            printf("J= %d \n",j);
-            //if(ch != NULL && ch !="#") {
-                ch2 = strtok(ch, "|");
-                i=0;
-                while (ch2 != NULL) {
-                    //exit(0);
-                    if(ch2 != "|") {
-                        if(i == 0) {
-                            //id
-                            id = atoi(ch2);
-                        }
-                        if(i == 1) {
-                            //name
-                            //exit(1);
-                            strcpy(Nnome, ch2);
-                        }
-                        if(i == 2) {
-                            //father
-                            father_id = atoi(ch2);
-                        }
-                        if(i == 3) {
-                            //property
-                            property_id = atoi(ch2);
-                        }
-                        if(i == 4) {
-                            //datetime
-                            strcpy(datetime, ch2);
-                            printf("%s", ch2);
-                        }
-                        if(i == 5) {
-                            //datetime
-                            strcat(datetime, ch2);
-                        }
-                        if(i == 6) {
-                            //datetime
-                            strcat(datetime, ch2);
-                        }
-                        if(i == 7) {
-                            //datetime
-                            strcat(datetime, ch2);
-                        }
-                        
-                        i++;
-                        
-                        ch2 = strtok(NULL, " |");
-                        printf("%s \n", ch2);
-                    }
-                }
-                
-                insertDirsFiles(inicio, id, Nnome, father_id, property_id, datetime);
-                //ch = strtok(NULL, " #");
-            //}
-            //printf("Insert %d NOME: %s Pai: %d", id, Nnome, father_id);
-            //exit(0);
-            ch = strtok(NULL, " #");
-            //printf("\n\n\n\n %s \n\n\n\n", ch);
-            
-            j++;
-            
-        }
-        
-    }
-}
- */
 
 void Le_valor_arquivo_Dirs(Dirs *inicio) {
     char all[200],allTemp[200];
@@ -916,6 +842,7 @@ void Le_valor_arquivo_Dirs(Dirs *inicio) {
     } else {
         fgets(all,sizeof(all), arquivo);
         strcpy(allTemp, all);
+        fclose(arquivo);
         i=0;
         for (token = strtok(all, "#"); token; token = strtok(NULL, "#"))
         {
@@ -948,7 +875,7 @@ void Le_valor_arquivo_Dirs(Dirs *inicio) {
 }
 
 void SplitPipeDirs(Dirs *inicio, char* all) {
-    printf("%s \n", all);
+    //printf("%s \n", all);
     int i, count =0;
     char Nname[100];
     char* token, id[10], father_id[10], property_id[10], datetime[100], *ch;
@@ -964,7 +891,7 @@ void SplitPipeDirs(Dirs *inicio, char* all) {
         }
         if(i==1) {
             strcpy(Nname, token);
-            printf(" \n\n Id: %s \n\n", Nname);
+            //printf(" \n\n Id: %s \n\n", Nname);
         }
         if(i==2) {
             strcpy(father_id, token);
@@ -978,6 +905,195 @@ void SplitPipeDirs(Dirs *inicio, char* all) {
         i++;
     }
     InsertDirsFiles(inicio, atoi(id), Nname, atoi(father_id), atoi(property_id), datetime);
+    //printf(" \n\n Id: %s \n\n", id);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* *** USERS *** */
+
+char* STRSaveUsers (Users *users_ini) {
+    char retorno[9999];
+    char temp[10];
+    Users *percorre;
+    percorre = users_ini;
+    int i =0;
+    while (1 > 0)
+    {
+        if(percorre == NULL) {break;}
+        //printf(" \n\n %d \n\n", percorre->id);
+        //exit(2);
+        if(percorre->id > 1) {
+            printf("%d", percorre->id);
+            if(i == 0) {
+                sprintf(retorno, "%d", percorre->id);
+                i++;
+            } else {
+                sprintf(temp, "%d", percorre->id);
+                strcat(retorno, temp);
+            }
+            
+            strcat(retorno, "|");
+            strcat(retorno, percorre->name);
+            strcat(retorno, "|");
+            strcat(retorno, percorre->login);
+            strcat(retorno, "|");
+            sprintf(temp, "%d", percorre->status);
+            strcat(retorno, temp);
+            strcat(retorno, "|");
+            sprintf(temp, "%d", percorre->dirId);
+            strcat(retorno, temp);
+            strcat(retorno, "#");
+            //printf("%s", retorno);
+        }
+        percorre = percorre -> prox;
+    }
+    //printf("%s", retorno);
+    return retorno;
+}
+
+void SaveUsers (Users *users_ini) {
+    FILE *arq;
+    
+    arq = fopen("Users.txt", "w");  // Cria um arquivo texto para gravação
+    if (arq == NULL) // Se não conseguiu criar
+    {
+        printf("Problemas na CRIACAO do arquivo Global\n");
+    }
+    char* str = STRSaveUsers(users_ini);
+    //printf("%s", str);exit(9);
+    fprintf(arq, "%s",str);
+    fclose(arq);
+    
+    //Le_valor_arquivo_globals();
+}
+
+
+void InsertUsersFiles (Users *users, int lid, char* name, char* login, int status, int dirId)
+{
+    //printf("LID %d NAME: %s, FATHER: %d PROPERTY: %d DATA %s", lid, name, father_id, property_id, datetime);
+    //exit(1);
+    Users *percorre;
+    
+    /* Criacao do novo no - AlocaÁ„o de memoria */
+    Users *no_novo = (Users *) malloc(sizeof(Users));
+    no_novo -> id = lid;
+    no_novo -> status = status;
+    no_novo -> dirId = dirId;
+    strcpy(no_novo->name, name);
+    strcpy(no_novo->login, login);
+    no_novo -> prox = NULL;
+    
+    percorre =  users;
+    
+    while (percorre->prox != NULL)
+    {
+        percorre = percorre -> prox;
+    }
+    percorre->prox = no_novo;
+    
+    
+}
+
+
+
+
+
+
+
+
+
+void Le_valor_arquivo_Users(Users *inicio) {
+    char all[200],allTemp[200];
+    FILE *arquivo;
+    int id, status, dirId, i, j=0;
+    char Nnome[9999], login[100];
+    char* token;
+    char* token2;
+    char* tempToken;
+    arquivo=fopen("Users.txt","r");
+    if ( arquivo == NULL ) {
+        printf("Nao existem Usuários salvos.\n");
+        
+    } else {
+        fgets(all,sizeof(all), arquivo);
+        fclose(arquivo);
+        //printf("\n\n %s \n\n", all);
+        strcpy(allTemp, all);
+        i=0;
+        for (token = strtok(all, "#"); token; token = strtok(NULL, "#"))
+        {
+            tempToken = token;
+            i++;
+        }
+        
+        char *a[i];
+        i=0;
+        for (token = strtok(allTemp, "#"); token; token = strtok(NULL, "#"))
+        {
+            a[i] = token;
+            i++;
+        }
+        j=0;
+        //printf("I %s \n",a[i]);
+        for(j=0; j<i;j++)
+        {
+            //printf("%s \n", a[j]);
+            SplitPipeUsers(inicio, a[j]);
+            
+        }
+        
+    }
+}
+
+
+
+void SplitPipeUsers(Users *inicio, char* all) {
+    //printf("%s \n", all);
+    int i, count =0;
+    char Nname[100];
+    char* token, id[10], status[10], name[100], login[100], dirId[100], *ch;
+    /*for (int i = 0; all[i] != '\0'; ++i) {
+     
+     }*/
+    i=0;
+    for (token = strtok(all, "|"); token; token = strtok(NULL, "|"))
+    {
+        //printf("User token=%s\n", token);
+        if(i == 0) {
+            strcpy(id, token);
+        }
+        if(i==1) {
+            strcpy(Nname, token);
+            //printf(" \n\n Id: %s \n\n", Nname);
+        }
+        if(i==2) {
+            strcpy(login, token);
+        }
+        if(i==3) {
+            strcpy(status, token);
+        }
+        if(i==4) {
+            strcpy(dirId, token);
+        }
+        i++;
+    }
+    InsertUsersFiles(inicio, atoi(id), Nname, login, atoi(status), atoi(dirId));
     //printf(" \n\n Id: %s \n\n", id);
 }
 
