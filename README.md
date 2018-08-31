@@ -42,5 +42,9 @@ username (até 8 caracteres/minúsculos)
 nome_completo
 estado
 
+### Como rodar
+cc main.c -o prog1
+./prog1
+
 
 
